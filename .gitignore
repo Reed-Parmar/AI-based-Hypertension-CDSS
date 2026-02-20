@@ -1,0 +1,87 @@
+# ========================
+# Python
+# ========================
+
+# Virtual environment
+.venv/
+venv/
+ENV/
+
+# Byte-compiled / cached
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+*.egg
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+*.cover
+*.py,cover
+.pytest_cache/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# ========================
+# ML / Data
+# ========================
+
+# Trained model artifacts (regenerate with train_model.py)
+backend/model/*.pkl
+!backend/model/.gitkeep
+
+# Datasets (if added later)
+*.csv
+*.tsv
+*.parquet
+
+# ========================
+# Environment & Secrets
+# ========================
+
+.env
+.env.*
+
+# ========================
+# OS
+# ========================
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# macOS
+.DS_Store
+._*
+
+# Linux
+*~
+
+# ========================
+# IDE / Editor
+# ========================
+
+.vscode/
+.idea/
+*.swp
+*.swo
+*.sublime-project
+*.sublime-workspace
+docs/
+BM Exp 4.pdf

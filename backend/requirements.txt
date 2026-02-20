@@ -1,0 +1,12 @@
+# Flask and CORS
+Flask==3.0.0
+flask-cors==4.0.0
+
+# Machine Learning - using pre-built wheels for Windows compatibility
+scikit-learn==1.4.0
+joblib==1.3.2
+numpy==1.26.3
+pandas==2.1.4
+
+# Note: The trained model (model/cdss_model.pkl) must be generated 
+# by running train_model.py first before starting the API server.

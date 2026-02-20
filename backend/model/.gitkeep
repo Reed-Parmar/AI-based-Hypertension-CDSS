@@ -1,0 +1,2 @@
+# This directory will contain the trained model (cdss_model.pkl)
+# Run train_model.py to generate the model file
