@@ -60,9 +60,9 @@ def validate_inputs(data: Dict[str, Any]) -> Tuple[bool, Optional[str]]:
         if data[field] is None:
             return False, f"Missing required field: {field}"
     
-    # Check field types (must be numeric)
+    # Check field types (must be numeric; reject booleans which pass isinstance(..., int))
     for field in REQUIRED_FIELDS:
-        if not isinstance(data[field], (int, float)):
+        if isinstance(data[field], bool) or not isinstance(data[field], (int, float)):
             return False, f"Invalid value for '{field}': must be a number"
     
     # Check individual field ranges
@@ -370,7 +370,7 @@ def classify_confidence_band(confidence: float) -> str:
       - High:     > 82%
 
     Args:
-        confidence: Percentage value (expected 60–92).
+        confidence: Percentage value (expected 60–90).
 
     Returns:
         "Low" | "Moderate" | "High"

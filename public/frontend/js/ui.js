@@ -6,7 +6,7 @@
  *
  * ALL direct DOM manipulation lives here.
  * Other modules (app.js, api.js) must never touch
- * the DOM directly � they call these functions instead.
+ * the DOM directly — they call these functions instead.
  * --------------------------------------------------
  */
 
@@ -45,6 +45,7 @@ const UI = (() => {
     } else {
       btnText.hidden = false;
       loader.hidden  = true;
+      btn.disabled   = false;
       if (icon) icon.hidden = false;
     }
   }
@@ -54,7 +55,7 @@ const UI = (() => {
    * Also toggles .input--error / .input--valid CSS classes.
    *
    * @param {string}      fieldName
-   * @param {string|null} message  � null clears the error
+   * @param {string|null} message  — null clears the error
    */
   function setFieldError(fieldName, message) {
     const errorEl = el(`${fieldName}-error`);
@@ -235,21 +236,46 @@ const UI = (() => {
     /* Gather form values for the row */
     const data = getFormData();
 
+    const VALID_BP_STAGES = ["normal", "elevated", "stage1", "stage2", "crisis", "unknown"];
+
     const tr = document.createElement("tr");
     tr.className = result.prediction === 1 ? "history-row--danger" : "history-row--success";
 
-    tr.innerHTML = `
-      <td>${_historyCount}</td>
-      <td>${data.age ?? "--"}</td>
-      <td>${data.bmi ?? "--"}</td>
-      <td>${data.cholesterol ?? "--"}</td>
-      <td>${data.systolic ?? "--"} / ${data.diastolic ?? "--"}</td>
-      <td><span class="bp-badge bp-badge--${result.bpStage}">${result.bpCategory}</span></td>
-      <td class="${result.prediction === 1 ? "text-danger" : "text-success"}">
-        ${result.prediction === 1 ? "&#x274C; Hypertensive" : "&#x2705; Normal"}
-      </td>
-      <td>${result.confidence}%</td>
-    `;
+    /* Build cells safely using textContent to prevent XSS */
+    const cells = [
+      String(_historyCount),
+      data.age ?? "--",
+      data.bmi ?? "--",
+      data.cholesterol ?? "--",
+      `${data.systolic ?? "--"} / ${data.diastolic ?? "--"}`,
+    ];
+
+    cells.forEach((text) => {
+      const td = document.createElement("td");
+      td.textContent = text;
+      tr.appendChild(td);
+    });
+
+    /* BP badge cell */
+    const bpTd = document.createElement("td");
+    const bpSpan = document.createElement("span");
+    bpSpan.className = "bp-badge";
+    const stage = VALID_BP_STAGES.includes(result.bpStage) ? result.bpStage : "unknown";
+    bpSpan.classList.add(`bp-badge--${stage}`);
+    bpSpan.textContent = result.bpCategory;
+    bpTd.appendChild(bpSpan);
+    tr.appendChild(bpTd);
+
+    /* Prediction cell */
+    const predTd = document.createElement("td");
+    predTd.classList.add(result.prediction === 1 ? "text-danger" : "text-success");
+    predTd.textContent = result.prediction === 1 ? "\u274C Hypertensive" : "\u2705 Normal";
+    tr.appendChild(predTd);
+
+    /* Confidence cell */
+    const confTd = document.createElement("td");
+    confTd.textContent = `${result.confidence}%`;
+    tr.appendChild(confTd);
 
     tbody.prepend(tr); // newest first
 

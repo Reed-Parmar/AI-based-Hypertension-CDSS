@@ -269,13 +269,15 @@ def main():
     print("\nPress Ctrl+C to stop the server")
     print("="*60)
     
-    # Run Flask development server
-    # Use debug=False for production-like behavior
-    # host=0.0.0.0 makes it accessible on network
+    # Run Flask development server.
+    # For production, use a WSGI server such as gunicorn:
+    #   gunicorn -w 4 -b 0.0.0.0:5000 app:app
+    debug = os.environ.get("FLASK_DEBUG", os.environ.get("DEBUG", "0")).lower() in ("1", "true", "yes")
+    host = "127.0.0.1" if debug else "0.0.0.0"
     app.run(
-        host="0.0.0.0",
+        host=host,
         port=5000,
-        debug=True
+        debug=debug
     )
 
 

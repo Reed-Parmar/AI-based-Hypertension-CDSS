@@ -45,10 +45,13 @@ htmlcov/
 backend/model/*.pkl
 !backend/model/.gitkeep
 
-# Datasets (if added later)
-*.csv
-*.tsv
-*.parquet
+# Datasets — scoped to data directories only
+data/**/*.csv
+data/**/*.tsv
+data/**/*.parquet
+datasets/**/*.csv
+datasets/**/*.tsv
+datasets/**/*.parquet
 
 # ========================
 # Environment & Secrets
@@ -84,4 +87,6 @@ Desktop.ini
 *.sublime-project
 *.sublime-workspace
 docs/
-BM Exp 4.pdf
+
+
+

@@ -71,7 +71,7 @@ const App = (() => {
     UI.hideResult();
 
     try {
-      /* Prediction call � swap Api.predictHypertension for a real fetch in api.js */
+      /* Prediction call -- swap Api.predictHypertension for a real fetch in api.js */
       const result = await Api.predictHypertension(patientData);
       UI.showResult(result);
     } catch (error) {

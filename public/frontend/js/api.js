@@ -45,12 +45,12 @@ const Api = (() => {
     if ((systolic >= 130 && systolic <= 139) || (diastolic >= 80 && diastolic <= 89)) {
       return { category: "High BP – Stage 1", stage: "stage1", color: "orange" };
     }
+    /* Hypertensive crisis — must check before Stage 2 */
+    if (systolic >= 180 || diastolic >= 120) {
+      return { category: "Hypertensive Crisis", stage: "crisis", color: "darkred" };
+    }
     if (systolic >= 140 || diastolic >= 90) {
       return { category: "High BP – Stage 2", stage: "stage2", color: "red" };
-    }
-    /* Hypertensive crisis */
-    if (systolic > 180 || diastolic > 120) {
-      return { category: "Hypertensive Crisis", stage: "crisis", color: "darkred" };
     }
     return { category: "Unknown", stage: "unknown", color: "gray" };
   }
@@ -144,11 +144,14 @@ const Api = (() => {
   /**
    * Request a hypertension prediction for the given patient parameters.
    *
-   * Currently returns a mocked result after a simulated delay.
-   * To connect a real Python/Flask ML backend, replace the Promise
-   * body with the fetch() call shown in comments below.
+   * Sends a POST request to the Flask ML backend at
+   * `${BASE_URL}/api/predict` with the patient data as JSON.
+   * The endpoint is configurable via the BASE_URL constant.
    *
-   * Expected backend JSON response shape:
+   * NOTE: A mock implementation (_mockPredict) is retained above
+   * for offline/demo use but is no longer called by default.
+   *
+   * Backend JSON response shape:
    * {
    *   "prediction":  0 | 1,
    *   "confidence":  50-98,

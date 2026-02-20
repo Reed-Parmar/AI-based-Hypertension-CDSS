@@ -48,7 +48,7 @@
         <div class="form-group">
           <label for="age" class="form-label">Age <span class="form-required" aria-label="required">*</span></label>
           <div class="input-wrapper">
-            <input type="number" id="age" name="age" class="form-input" placeholder="e.g. 55" min="1" max="120" step="1" required aria-describedby="age-helper age-error" />
+            <input type="number" id="age" name="age" class="form-input" placeholder="e.g. 55" min="18" max="120" step="1" required aria-describedby="age-helper age-error" />
             <span class="input-unit">years</span>
           </div>
           <span id="age-helper" class="form-helper">Normal adult range: 18 &ndash; 120 years</span>
@@ -140,7 +140,11 @@
         </div>
         <div class="result-details">
           <div class="result-confidence">
-            <span class="result-confidence-label" title="Confidence reflects model certainty, not clinical certainty.">Confidence Score &#9432;</span>
+            <span class="result-confidence-label">
+              Confidence Score
+              <button type="button" class="info-icon" aria-label="Confidence info" aria-describedby="confidence-tooltip">&#9432;</button>
+              <span id="confidence-tooltip" class="info-tooltip" role="tooltip">Confidence reflects model certainty, not clinical certainty.</span>
+            </span>
             <div class="confidence-bar-wrapper">
               <div id="confidence-bar" class="confidence-bar">
                 <div id="confidence-bar-fill" class="confidence-bar-fill"></div>
@@ -198,7 +202,11 @@
 
         <!-- Confidence -->
         <div class="ci-row">
-          <span class="ci-label" title="Confidence reflects model certainty, not clinical certainty.">Model Confidence &#9432;</span>
+          <span class="ci-label">
+            Model Confidence
+            <button type="button" class="info-icon" aria-label="Confidence info" aria-describedby="ci-confidence-desc">&#9432;</button>
+            <span id="ci-confidence-desc" class="info-tooltip" role="tooltip">Confidence reflects model certainty, not clinical certainty.</span>
+          </span>
           <span id="ci-confidence" class="ci-value ci-value--confidence">—</span>
           <span id="ci-confidence-band" class="confidence-band"></span>
         </div>
