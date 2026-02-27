@@ -42,7 +42,7 @@ htmlcov/
 # ========================
 
 # Trained model artifacts (regenerate with train_model.py)
-backend/model/*.pkl
+
 !backend/model/.gitkeep
 
 # Datasets — scoped to data directories only

@@ -77,7 +77,7 @@ AI-based-Hypertension-CDSS/
 ### 1. Clone & Create Virtual Environment
 
 ```bash
-git clone https://github.com/<your-username>/AI-based-Hypertension-CDSS.git
+git clone https://github.com/Reed-Parmar/AI-based-Hypertension-CDSS.git
 cd AI-based-Hypertension-CDSS
 
 python -m venv .venv
