@@ -54,18 +54,20 @@ app = Flask(__name__)
 
 # CORS configuration
 # Allow the deployed Vercel frontend and local development origins.
+_cors_config = {
+    "origins": [
+        "https://ai-based-hypertension-cdss.vercel.app",
+        "https://ai-based-hypertension-cdss-reedham-parmars-projects.vercel.app",
+        "https://ai-based-hypertension-cdss-git-main-reedham-parmars-projects.vercel.app",
+        "http://127.0.0.1:5500",
+        "http://localhost:5500"
+    ],
+    "methods": ["GET", "POST", "OPTIONS"],
+    "allow_headers": ["Content-Type", "Authorization"]
+}
 CORS(app, resources={
-    r"/api/*": {
-        "origins": [
-            "https://ai-based-hypertension-cdss.vercel.app",
-            "https://ai-based-hypertension-cdss-reedham-parmars-projects.vercel.app",
-            "https://ai-based-hypertension-cdss-git-main-reedham-parmars-projects.vercel.app",
-            "http://127.0.0.1:5500",
-            "http://localhost:5500"
-        ],
-        "methods": ["GET", "POST", "OPTIONS"],
-        "allow_headers": ["Content-Type", "Authorization"]
-    }
+    r"/api/*": _cors_config,
+    r"/": _cors_config,
 })
 
 # Model configuration
