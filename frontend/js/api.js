@@ -18,8 +18,8 @@
 const Api = (() => {
   "use strict";
 
-  /** Base URL for the real backend (update when deploying). */
-  const BASE_URL = "http://localhost:5000";
+  /** Base URL for the real backend (Render deployment). */
+  const BASE_URL = "https://ai-based-hypertension-cdss-x6ub.onrender.com";
 
   /** Simulated network latency in milliseconds. */
   const MOCK_DELAY_MS = 1400;
@@ -167,19 +167,58 @@ const Api = (() => {
    * @returns {Promise<Object>}
    */
   async function predictHypertension(patientData) {
-    /* ───────────────────────────────────────────────────────────────────
-     * REAL BACKEND — connected to Python Flask API
-     */
-    const response = await fetch(`${BASE_URL}/api/predict`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(patientData),
-    });
-    if (!response.ok) {
-      const err = await response.json().catch(() => ({}));
-      throw new Error(err.error || `Server error: ${response.status}`);
+    /* Map frontend field names to backend API field names */
+    const payload = {
+      age:          patientData.age,
+      bmi:          patientData.bmi,
+      cholesterol:  patientData.cholesterol,
+      systolic_bp:  patientData.systolic,
+      diastolic_bp: patientData.diastolic,
+    };
+
+    let response;
+    try {
+      response = await fetch(`${BASE_URL}/api/predict`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+    } catch (networkError) {
+      /* Network failure or CORS block — fetch throws a TypeError */
+      throw new Error(
+        "Network error: Unable to reach the prediction server. " +
+        "Please check your internet connection and try again."
+      );
     }
-    return response.json();
+
+    /* Handle non-OK HTTP responses */
+    if (!response.ok) {
+      let errMsg = `Server error (${response.status})`;
+      try {
+        const errBody = await response.json();
+        if (errBody && errBody.error) {
+          errMsg = errBody.error;
+        }
+      } catch (_) {
+        /* response body was not JSON — keep generic message */
+      }
+      throw new Error(errMsg);
+    }
+
+    /* Parse response JSON safely */
+    let result;
+    try {
+      result = await response.json();
+    } catch (_) {
+      throw new Error("Invalid response from server. Please try again.");
+    }
+
+    /* Sanity-check expected fields exist */
+    if (result.prediction === undefined || result.confidence === undefined) {
+      throw new Error("Unexpected response structure from server.");
+    }
+
+    return result;
   }
 
   /* Expose public methods */

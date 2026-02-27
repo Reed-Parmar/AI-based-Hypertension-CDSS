@@ -53,14 +53,20 @@ from utils.preprocess import (
 app = Flask(__name__)
 
 # CORS configuration
-# Allow only the VS Code Live Server frontend origins.
-# methods: GET, POST, OPTIONS (OPTIONS is implicit for preflight).
-# headers: Content-Type (for JSON), Authorization (for future auth).
-CORS(app, origins=[
-    "http://127.0.0.1:5500",
-    "http://localhost:5500"
-], methods=["GET", "POST", "OPTIONS"],
-   allow_headers=["Content-Type", "Authorization"])
+# Allow the deployed Vercel frontend and local development origins.
+CORS(app, resources={
+    r"/api/*": {
+        "origins": [
+            "https://ai-based-hypertension-cdss.vercel.app",
+            "https://ai-based-hypertension-cdss-reedham-parmars-projects.vercel.app",
+            "https://ai-based-hypertension-cdss-git-main-reedham-parmars-projects.vercel.app",
+            "http://127.0.0.1:5500",
+            "http://localhost:5500"
+        ],
+        "methods": ["GET", "POST", "OPTIONS"],
+        "allow_headers": ["Content-Type", "Authorization"]
+    }
+})
 
 # Model configuration
 MODEL_PATH = os.path.join(os.path.dirname(__file__), "model", "cdss_model.pkl")
@@ -79,36 +85,50 @@ def load_model():
     Load the trained model from disk.
     
     Returns:
-        Loaded sklearn Pipeline object
-        
-    Raises:
-        FileNotFoundError: If model file doesn't exist
+        Loaded sklearn Pipeline object, or None on failure
     """
     global model
     
     if not os.path.exists(MODEL_PATH):
-        raise FileNotFoundError(
-            f"Model not found at {MODEL_PATH}. "
-            "Please run train_model.py first to generate the model."
-        )
+        print(f"WARNING: Model not found at {MODEL_PATH}. "
+              "Please run train_model.py first to generate the model.",
+              file=sys.stderr)
+        return None
     
-    model = joblib.load(MODEL_PATH)
-    print(f"Model loaded successfully from {MODEL_PATH}")
-    
-    return model
+    try:
+        model = joblib.load(MODEL_PATH)
+        print(f"Model loaded successfully from {MODEL_PATH}")
+        return model
+    except Exception as e:
+        print(f"ERROR: Failed to load model from {MODEL_PATH}: {e}",
+              file=sys.stderr)
+        model = None
+        return None
+
+
+# Load model at module level so gunicorn workers pick it up
+load_model()
 
 
 # =============================================================================
 # API ROUTES
 # =============================================================================
 
+@app.route("/", methods=["GET"])
+def root():
+    """Root route returning service info."""
+    return jsonify({
+        "service": "Hypertension CDSS API",
+        "status": "running",
+        "endpoints": ["/api/health", "/api/predict"]
+    }), 200
+
+
 @app.route("/api/health", methods=["GET"])
 def health_check():
     """
     Health check endpoint.
-    
-    Returns:
-        JSON response with server status
+    Verifies API is running and model is loaded.
     """
     model_loaded = model is not None
     
@@ -129,8 +149,8 @@ def predict():
         "age": number,
         "bmi": number,
         "cholesterol": number,
-        "systolic": number,
-        "diastolic": number
+        "systolic_bp": number,
+        "diastolic_bp": number
     }
     
     Returns:
@@ -168,8 +188,8 @@ def predict():
         age = int(data["age"])
         bmi = float(data["bmi"])
         cholesterol = int(data["cholesterol"])
-        systolic = int(data["systolic"])
-        diastolic = int(data["diastolic"])
+        systolic = int(data["systolic_bp"])
+        diastolic = int(data["diastolic_bp"])
         
         # Build feature array for model
         X = build_feature_array(data)
@@ -251,33 +271,27 @@ def main():
     print("Hypertension CDSS - API Server")
     print("="*60)
     
-    # Load model
-    try:
-        load_model()
-    except FileNotFoundError as e:
-        print(f"\nERROR: {e}")
-        print("\nPlease run the training script first:")
+    # Model is already loaded at module level; check status
+    if model is None:
+        print("\nWARNING: Model not loaded. Predictions will fail.")
+        print("Please run the training script first:")
         print("  python train_model.py")
-        sys.exit(1)
     
     # Start server
-    print("\nStarting server...")
-    print("API available at: http://localhost:5000")
+    port = int(os.environ.get("PORT", 5000))
+    print(f"\nStarting server on port {port}...")
+    print(f"API available at: http://0.0.0.0:{port}")
     print("Endpoints:")
-    print("  - POST /api/predict")
+    print("  - GET  /")
     print("  - GET  /api/health")
+    print("  - POST /api/predict")
     print("\nPress Ctrl+C to stop the server")
     print("="*60)
     
-    # Run Flask development server.
-    # For production, use a WSGI server such as gunicorn:
-    #   gunicorn -w 4 -b 0.0.0.0:5000 app:app
-    debug = os.environ.get("FLASK_DEBUG", os.environ.get("DEBUG", "0")).lower() in ("1", "true", "yes")
-    host = "127.0.0.1" if debug else "0.0.0.0"
     app.run(
-        host=host,
-        port=5000,
-        debug=debug
+        host="0.0.0.0",
+        port=port,
+        debug=os.environ.get("FLASK_DEBUG", "0").lower() in ("1", "true", "yes")
     )
 
 

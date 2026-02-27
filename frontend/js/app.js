@@ -71,12 +71,13 @@ const App = (() => {
     UI.hideResult();
 
     try {
-      /* Prediction call -- swap Api.predictHypertension for a real fetch in api.js */
+      /* Prediction call — goes to Flask backend via api.js */
       const result = await Api.predictHypertension(patientData);
       UI.showResult(result);
     } catch (error) {
       console.error("[CDSS] Prediction failed:", error);
-      _showError("Prediction failed. Please try again.");
+      const msg = error.message || "Prediction failed. Please try again.";
+      _showError(msg);
     } finally {
       UI.setLoading(false);
       _validateForm(); // restore button state after loading

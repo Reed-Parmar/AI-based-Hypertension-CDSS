@@ -25,15 +25,15 @@ FIELD_RANGES = {
     "age": {"min": 1, "max": 120},
     "bmi": {"min": 10.0, "max": 70.0},
     "cholesterol": {"min": 50, "max": 600},
-    "systolic": {"min": 60, "max": 300},
-    "diastolic": {"min": 30, "max": 200},
+    "systolic_bp": {"min": 60, "max": 300},
+    "diastolic_bp": {"min": 30, "max": 200},
 }
 
 # Required fields
-REQUIRED_FIELDS = ["age", "bmi", "cholesterol", "systolic", "diastolic"]
+REQUIRED_FIELDS = ["age", "bmi", "cholesterol", "systolic_bp", "diastolic_bp"]
 
 # Feature names in order expected by the model
-FEATURE_NAMES = ["age", "bmi", "cholesterol", "systolic", "diastolic"]
+FEATURE_NAMES = ["age", "bmi", "cholesterol", "systolic_bp", "diastolic_bp"]
 
 
 # =============================================================================
@@ -78,8 +78,8 @@ def validate_inputs(data: Dict[str, Any]) -> Tuple[bool, Optional[str]]:
             return False, f"Invalid value for '{field}': must be between {range_info['min']} and {range_info['max']}"
     
     # Cross-field validation: diastolic must be less than systolic
-    if data["diastolic"] >= data["systolic"]:
-        return False, "diastolic must be less than systolic"
+    if data["diastolic_bp"] >= data["systolic_bp"]:
+        return False, "diastolic_bp must be less than systolic_bp"
     
     return True, None
 
@@ -99,8 +99,8 @@ def build_feature_array(data: Dict[str, Any]) -> np.ndarray:
         data["age"],
         data["bmi"],
         data["cholesterol"],
-        data["systolic"],
-        data["diastolic"]
+        data["systolic_bp"],
+        data["diastolic_bp"]
     ]], dtype=np.float64)
     
     return features
