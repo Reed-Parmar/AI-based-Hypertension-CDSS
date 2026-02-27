@@ -1,8 +1,8 @@
 # AI-Driven Hypertension Clinical Decision Support System (CDSS)
 
-A web-based Clinical Decision Support System that predicts hypertension risk using a Decision Tree machine learning classifier. Built as an academic Biomedical Engineering project.
+A web-based Clinical Decision Support System that predicts hypertension risk using a **Decision Tree** machine learning classifier. Built as an academic Biomedical Engineering project.
 
-A clinician enters five patient biometrics — the system returns a hypertension prediction, confidence score, AHA/ACC 2017 blood pressure classification, identified risk factors, and clinical interpretation.
+A clinician enters five patient biometrics — the system returns a binary hypertension prediction, confidence score, AHA/ACC 2017 blood pressure classification, flagged risk factors, and a clinical interpretation summary.
 
 > **Disclaimer:** This is an academic demonstration project, not a production clinical tool. It must not be used for actual medical diagnosis or treatment decisions.
 
@@ -10,13 +10,36 @@ A clinician enters five patient biometrics — the system returns a hypertension
 
 ## Features
 
-- **ML-Powered Prediction** — Decision Tree classifier (scikit-learn) trained on 600 synthetic cardiovascular samples
+- **ML-Powered Prediction** — scikit-learn `DecisionTreeClassifier` pipeline trained on 600 synthetic cardiovascular samples
 - **AHA/ACC 2017 BP Classification** — Normal, Elevated, Stage 1, Stage 2, Hypertensive Crisis
-- **Real-Time Input Validation** — Client-side range checks and cross-field rules with inline feedback
-- **Clinical Interpretation Panel** — Risk factors, BP category, and risk score breakdown
-- **Session History** — Tabular log of all predictions made during a session
-- **Mock Mode** — Frontend works standalone with simulated predictions when the backend is unavailable
+- **Real-Time Input Validation** — Client-side range checks and cross-field rules (e.g. diastolic < systolic) with inline feedback
+- **Clinical Interpretation Panel** — Primary decision driver, secondary risk factors, and confidence band
+- **Session History** — In-browser tabular log of all predictions made during a session
+- **Confidence Scoring** — Risk-score-based confidence mapped to Low / Moderate / High bands
 - **Responsive UI** — Clean, accessible HTML/CSS interface with ARIA labels
+
+---
+
+## System Architecture
+
+```
+┌──────────────────────────┐        HTTPS         ┌──────────────────────────┐
+│      Frontend (Vercel)   │ ────────────────────► │    Backend (Render)      │
+│  HTML / CSS / Vanilla JS │ ◄──────────────────── │  Flask + scikit-learn    │
+└──────────────────────────┘    JSON responses     └──────────────────────────┘
+        │                                                  │
+        │  validators.js — input validation                │  preprocess.py — validation, BP classification
+        │  api.js        — fetch() to backend              │  model/cdss_model.pkl — trained pipeline
+        │  ui.js         — DOM rendering                   │  app.py — REST API routes
+        │  app.js        — controller / event wiring       │  train_model.py — training script
+        └──────────────────────────────────────────────────┘
+```
+
+| Component | Responsibility |
+|---|---|
+| **Frontend** | Collects patient data, validates inputs, calls backend API, renders results |
+| **Backend** | Validates inputs server-side, runs ML inference, returns structured JSON |
+| **ML Pipeline** | `StandardScaler` → `DecisionTreeClassifier` (serialised with joblib) |
 
 ---
 
@@ -24,9 +47,10 @@ A clinician enters five patient biometrics — the system returns a hypertension
 
 | Layer | Technology |
 |---|---|
-| Backend | Python 3.9+, Flask 3.0, flask-cors |
-| ML | scikit-learn 1.4 (DecisionTreeClassifier), joblib, NumPy, Pandas |
+| Backend | Python 3.13, Flask 3.0, flask-cors 4.0, gunicorn |
+| ML | scikit-learn 1.4 (`DecisionTreeClassifier`), joblib, NumPy, Pandas |
 | Frontend | HTML5, CSS3, Vanilla JavaScript (ES6+, IIFE modules) |
+| Hosting | Frontend on **Vercel**, Backend on **Render** |
 | Dev Server | VS Code Live Server (port 5500) |
 
 ---
@@ -36,37 +60,57 @@ A clinician enters five patient biometrics — the system returns a hypertension
 ```
 AI-based-Hypertension-CDSS/
 ├── backend/
-│   ├── app.py                  # Flask API server (POST /api/predict, GET /api/health)
-│   ├── train_model.py          # Dataset generation & model training script
-│   ├── requirements.txt        # Python dependencies
+│   ├── app.py                  # Flask API server (routes: /, /api/health, /api/predict)
+│   ├── train_model.py          # Synthetic dataset generation & model training
+│   ├── requirements.txt        # Python dependencies (Flask, scikit-learn, gunicorn, etc.)
+│   ├── runtime.txt             # Python version for Render
 │   ├── model/
 │   │   └── cdss_model.pkl      # Trained sklearn Pipeline (generated by train_model.py)
 │   └── utils/
-│       └── preprocess.py       # Input validation, BP classification, risk scoring
-├── public/
-│   └── frontend/
-│       ├── index.html           # Main application page
-│       ├── css/
-│       │   └── style.css        # Application styles
-│       └── js/
-│           ├── validators.js    # Client-side input validation (zero dependencies)
-│           ├── api.js           # API communication + mock fallback
-│           ├── ui.js            # DOM rendering (result card, history table, interpretation)
-│           └── app.js           # Application controller (event binding, orchestration)
-├── docs/                        # Detailed project documentation
-│   ├── api-contract.md          # Full API schema & examples
-│   ├── architecture.md          # Module dependency graph & data flow
-│   ├── clinical-reference.md    # AHA/ACC 2017 guidelines reference
-│   ├── context.md               # Complete development log
-│   ├── experiment.md            # Academic experiment write-up
-│   ├── model.md                 # ML model documentation
-│   └── setup.md                 # Detailed setup & troubleshooting guide
+│       └── preprocess.py       # Input validation, feature array, BP classification, risk scoring
+├── frontend/
+│   ├── index.html              # Main application page
+│   ├── css/
+│   │   └── style.css           # Application styles
+│   └── js/
+│       ├── validators.js       # Client-side input validation (zero dependencies)
+│       ├── api.js              # Backend communication via fetch()
+│       ├── ui.js               # DOM rendering (result card, history table, interpretation)
+│       └── app.js              # Application controller (event binding, orchestration)
+├── docs/                       # Detailed project documentation
+│   ├── api-contract.md         # Full API schema & examples
+│   ├── architecture.md         # Module dependency graph & data flow
+│   ├── clinical-reference.md   # AHA/ACC 2017 guidelines reference
+│   ├── context.md              # Complete development log
+│   ├── experiment.md           # Academic experiment write-up
+│   ├── model.md                # ML model documentation
+│   └── setup.md                # Detailed setup & troubleshooting guide
 └── .gitignore
 ```
 
 ---
 
-## Quick Start
+## API Endpoints
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/` | Service info (name, status, available endpoints) |
+| `GET` | `/api/health` | Health check — confirms API is running and model is loaded |
+| `POST` | `/api/predict` | Submit patient data, receive hypertension prediction |
+
+### Request Fields (`POST /api/predict`)
+
+| Field | Type | Range | Description |
+|---|---|---|---|
+| `age` | integer | 1 – 120 | Patient age in years |
+| `bmi` | float | 10 – 70 | Body Mass Index (kg/m²) |
+| `cholesterol` | integer | 50 – 600 | Total cholesterol (mg/dL) |
+| `systolic_bp` | integer | 60 – 300 | Systolic blood pressure (mmHg) |
+| `diastolic_bp` | integer | 30 – 200 | Diastolic blood pressure (mmHg) |
+
+---
+
+## How to Run Locally
 
 ### Prerequisites
 
@@ -114,25 +158,41 @@ The Flask server starts at `http://localhost:5000`.
 
 ### 5. Open the Frontend
 
-Open `public/frontend/index.html` with **VS Code Live Server** (port 5500) or any local HTTP server. The frontend auto-detects the backend.
+Open `frontend/index.html` with **VS Code Live Server** (port 5500) or any local HTTP server.
 
-> **Tip:** If the backend is unavailable, the frontend switches to mock mode automatically.
+> For local development the backend accepts requests from `http://localhost:5500` and `http://127.0.0.1:5500`.
 
 ---
 
-## API Endpoints
+## Deployment
 
-| Method | Endpoint | Description |
-|---|---|---|
-| `POST` | `/api/predict` | Submit patient data, receive hypertension prediction |
-| `GET` | `/api/health` | Server & model health check |
+### Frontend — Vercel
 
-### Example Request
+The `frontend/` directory is deployed as a static site on Vercel.
+
+- **Live URL:** [https://ai-based-hypertension-cdss.vercel.app](https://ai-based-hypertension-cdss.vercel.app)
+- No build step required — Vercel serves the static HTML/CSS/JS files directly.
+- The API base URL is configured in `frontend/js/api.js` (`BASE_URL` constant).
+
+### Backend — Render
+
+The `backend/` directory is deployed as a Web Service on Render.
+
+- **Live URL:** [https://ai-based-hypertension-cdss-x6ub.onrender.com](https://ai-based-hypertension-cdss-x6ub.onrender.com)
+- **Runtime:** Python 3.13 (configured in `backend/runtime.txt`)
+- **Start command:** `gunicorn app:app` (gunicorn reads the `PORT` environment variable set by Render)
+- **CORS:** Configured to allow requests only from the Vercel frontend domains and local dev origins.
+
+> **Note:** Render free-tier services spin down after inactivity. The first request after idle may take 30–60 seconds.
+
+---
+
+## Example API Request
 
 ```bash
-curl -X POST http://localhost:5000/api/predict \
+curl -X POST https://ai-based-hypertension-cdss-x6ub.onrender.com/api/predict \
   -H "Content-Type: application/json" \
-  -d '{"age": 55, "bmi": 30.2, "cholesterol": 245, "systolic": 145, "diastolic": 92}'
+  -d '{"age": 55, "bmi": 30.2, "cholesterol": 245, "systolic_bp": 145, "diastolic_bp": 92}'
 ```
 
 ### Example Response
@@ -140,15 +200,16 @@ curl -X POST http://localhost:5000/api/predict \
 ```json
 {
   "prediction": 1,
-  "confidence": 86.5,
+  "confidence": 83.5,
+  "confidenceBand": "High",
   "riskScore": 73,
   "bpCategory": "High BP – Stage 2",
   "bpStage": "stage2",
   "bpColor": "red",
   "riskFactors": [
-    "Stage 2 systolic hypertension (≥140 mmHg)",
-    "Stage 2 diastolic hypertension (≥90 mmHg)",
-    "Senior age (≥55 yrs)",
+    "Stage 2 systolic hypertension",
+    "Stage 2 diastolic hypertension",
+    "Middle age (≥45 yrs)",
     "Obesity (BMI ≥30)",
     "High cholesterol (≥240 mg/dL)"
   ]
@@ -166,14 +227,14 @@ curl -X POST http://localhost:5000/api/predict \
 | Hyperparameters | `max_depth=5`, `min_samples_split=10`, `min_samples_leaf=5`, `class_weight="balanced"` |
 | Training data | 600 synthetic samples (balanced: 300 per class) |
 | Features | Age, BMI, Cholesterol, Systolic BP, Diastolic BP |
-| Classes | 0 = Normotensive, 1 = Hypertensive |
+| Output | 0 = Normotensive, 1 = Hypertensive |
 | Expected accuracy | ~87–92% |
 
 ---
 
 ## Documentation
 
-Detailed documentation is available in the [docs/](docs/) directory:
+Detailed documentation is available in the [`docs/`](docs/) directory:
 
 - [Setup & Troubleshooting](docs/setup.md) — step-by-step install, run, and debug guide
 - [API Contract](docs/api-contract.md) — full request/response schemas with cURL examples
@@ -182,6 +243,17 @@ Detailed documentation is available in the [docs/](docs/) directory:
 - [Clinical Reference](docs/clinical-reference.md) — AHA/ACC 2017 guidelines, BMI, cholesterol ranges
 - [Experiment Write-Up](docs/experiment.md) — academic experiment report
 - [Development Context](docs/context.md) — complete log of decisions and changes
+
+---
+
+## Future Improvements
+
+- **Real clinical dataset** — Replace synthetic data with anonymised patient records for better generalisability
+- **Additional ML models** — Evaluate Random Forest, Gradient Boosting, or Logistic Regression alongside the Decision Tree
+- **User authentication** — Add clinician login and audit trail for predictions
+- **Patient history tracking** — Persist predictions in a database for longitudinal monitoring
+- **PDF report export** — Allow clinicians to download a formatted prediction report
+- **Expanded feature set** — Include smoking status, family history, diabetes, and medication data
 
 ---
 
